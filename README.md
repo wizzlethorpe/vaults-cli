@@ -14,7 +14,10 @@ is for contributors.
 vaults-cli/
 ├── cli/                    Node CLI + renderer (TypeScript, ESM, strict)
 │   ├── src/                Source
-│   ├── test/               Bases plugin test suite (node:test + tsx)
+│   │   ├── commands/       One file per subcommand (build/push/role/patreon/...)
+│   │   ├── render/         Markdown → HTML pipeline plugins
+│   │   └── settings.ts     Single-source-of-truth schema
+│   ├── test/               node:test + tsx (Bases, role gating, manifest contract)
 │   ├── dist/               Build output (published; gitignored)
 │   └── package.json        @wizzlethorpe/vaults
 ├── pnpm-workspace.yaml     Single-package workspace
@@ -41,7 +44,8 @@ user's Cloudflare account (one Pages project per user)
     └── functions/
         └── _middleware.js     role gate via signed cookie + variant rewrite,
                                plus /connect (token issuance), /_batch (text),
-                               /_batch-images (binary), /login, /logout.
+                               /_batch-images (binary), /login, /logout, and
+                               /auth/patreon/{login,callback} when configured.
 ```
 
 Single-role builds collapse `_variants/public/...` to the deploy root, no
@@ -52,11 +56,13 @@ auth Function.
 ```bash
 pnpm install          # install everything
 pnpm typecheck        # tsc --noEmit on cli/
-pnpm --filter @wizzlethorpe/vaults test            # bases test suite
+pnpm --filter @wizzlethorpe/vaults test            # all test suites
 pnpm --filter @wizzlethorpe/vaults run typecheck:test
 pnpm -r run build     # compile cli/dist
 ```
 
+Test files cover the Bases plugin, role gating + callout redaction,
+manifest contract (auth flags, hash folding), and passthrough media.
 CI (`.github/workflows/ci.yml`) runs typecheck + tests on every push and
 pull request.
 
@@ -69,10 +75,19 @@ pull request.
 - **Web Crypto everywhere.** PBKDF2-SHA256 (100k iterations) for
   password hashing, HMAC for cookie/bearer signing. Same code runs in
   Node and the Workers runtime.
+- **Patreon OAuth is optional and additive.** Roles can be password-only,
+  Patreon-only, or both. The middleware accepts whichever credential
+  arrives. Client secrets are stored as Wrangler secrets, never in the
+  vault.
 - **Settings schema is the single source of truth.** See `SCHEMA` in
   `cli/src/settings.ts`. To add a setting, add an entry there.
 - **Render plugins live in `cli/src/render/`.** New rendering features
   almost always become a new plugin or a new `RenderContext` field.
+- **Manifest is the public contract.** External clients (Foundry today,
+  AI tooling later) consume `/_manifest.json` for the deploy's `name`,
+  `auth.required`, role order, and per-page hashes. Per-page metadata
+  (role, title, foundry overrides) is folded into the hash so
+  frontmatter-only changes still trigger sync.
 
 ## License
 
