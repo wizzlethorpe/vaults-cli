@@ -1,3 +1,8 @@
+> [!IMPORTANT]
+> **This repo has moved.** It now lives as the [`cli/`](https://github.com/wizzlethorpe/vaults/tree/main/cli) directory of the [`wizzlethorpe/vaults`](https://github.com/wizzlethorpe/vaults) monorepo, alongside the CLI, Foundry module, and demo vault under one shared version. This repo is archived (read-only); please open issues and PRs against the monorepo.
+
+---
+
 # vaults-cli
 
 The deployable Cloudflare Pages template plus the `vaults` CLI that
